@@ -46,9 +46,15 @@ export function FarmerDashboard() {
         )
       `).order('created_at', { ascending: false }),
     ]);
+
+    const normalizedOrders = ((o as OrderWithItems[]) ?? []).map((order) => ({
+      ...order,
+      order_items: Array.isArray(order.order_items) ? order.order_items : [],
+    }));
+
     setFarmerProfile(fp as FarmerProfile | null);
     setBatches((b as ProduceBatch[]) ?? []);
-    setOrders((o as OrderWithItems[]) ?? []);
+    setOrders(normalizedOrders);
     setLoading(false);
   }, [user]);
 
@@ -59,8 +65,8 @@ export function FarmerDashboard() {
   const activeBatches = batches.filter(b => b.status === 'available');
   const soldBatches = batches.filter(b => ['sold', 'packed', 'shipped', 'delivered'].includes(b.status));
   const totalRevenue = soldBatches.reduce((sum, b) => {
-    const orderItems = orders.flatMap(o => o.order_items);
-    const item = orderItems.find(oi => oi.batch_id === b.id);
+    const orderItems = orders.flatMap((o) => Array.isArray(o.order_items) ? o.order_items : []);
+    const item = orderItems.find((oi) => oi?.batch_id === b.id);
     return sum + (item?.line_total ?? 0);
   }, 0);
 
@@ -317,7 +323,7 @@ function OrdersTab({ orders, onRefresh }: { orders: OrderWithItems[]; onRefresh:
   const { toast } = useToast();
   const { user } = useAuth();
 
-  const myOrders = orders.filter(o => o.order_items.some(oi => oi.produce_batches?.farmer_id === user?.id));
+  const myOrders = orders.filter((o) => Array.isArray(o.order_items) && o.order_items.some((oi) => oi.produce_batches?.farmer_id === user?.id));
 
   const updateOrderStatus = async (orderId: string, status: string) => {
     const { error } = await supabase.from('orders').update({ status }).eq('id', orderId);
@@ -333,7 +339,7 @@ function OrdersTab({ orders, onRefresh }: { orders: OrderWithItems[]; onRefresh:
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
       {myOrders.map(order => {
-        const myItems = order.order_items.filter(oi => oi.produce_batches?.farmer_id === user?.id);
+        const myItems = (Array.isArray(order.order_items) ? order.order_items : []).filter((oi) => oi.produce_batches?.farmer_id === user?.id);
         const myTotal = myItems.reduce((sum, oi) => sum + oi.line_total, 0);
         return (
           <div key={order.id} className="card">
@@ -406,23 +412,23 @@ function AnalyticsTab({ batches, orders, totalRevenue }: {
   batches: ProduceBatch[]; orders: OrderWithItems[]; totalRevenue: number;
 }) {
   const { user } = useAuth();
-  const myOrders = orders.filter(o => o.order_items.some(oi => oi.produce_batches?.farmer_id === user?.id));
+  const myOrders = orders.filter((o) => Array.isArray(o.order_items) && o.order_items.some((oi) => oi.produce_batches?.farmer_id === user?.id));
 
   // Monthly revenue
   const monthlyRev: Record<string, number> = {};
-  myOrders.forEach(o => {
+  myOrders.forEach((o) => {
     const month = new Date(o.created_at).toLocaleDateString('en-IN', { month: 'short', year: '2-digit' });
-    const myTotal = o.order_items.filter(oi => oi.produce_batches?.farmer_id === user?.id).reduce((s, oi) => s + oi.line_total, 0);
+    const myTotal = (Array.isArray(o.order_items) ? o.order_items : []).filter((oi) => oi.produce_batches?.farmer_id === user?.id).reduce((s, oi) => s + (oi.line_total ?? 0), 0);
     monthlyRev[month] = (monthlyRev[month] ?? 0) + myTotal;
   });
   const monthlyData = Object.entries(monthlyRev).map(([month, revenue]) => ({ month, revenue }));
 
   // Top crops
   const cropRev: Record<string, number> = {};
-  myOrders.forEach(o => {
-    o.order_items.filter(oi => oi.produce_batches?.farmer_id === user?.id).forEach(oi => {
+  myOrders.forEach((o) => {
+    (Array.isArray(o.order_items) ? o.order_items : []).filter((oi) => oi.produce_batches?.farmer_id === user?.id).forEach((oi) => {
       const crop = oi.produce_batches?.crop_name ?? 'Unknown';
-      cropRev[crop] = (cropRev[crop] ?? 0) + oi.line_total;
+      cropRev[crop] = (cropRev[crop] ?? 0) + (oi.line_total ?? 0);
     });
   });
   const cropData = Object.entries(cropRev).map(([crop, revenue]) => ({ crop, revenue })).sort((a, b) => b.revenue - a.revenue).slice(0, 6);

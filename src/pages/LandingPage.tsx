@@ -6,6 +6,7 @@ import {
   TrendingUp, Users, Package, Star, MapPin, CheckCircle2,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/context/AuthContext';
 
 function useCountUp(end: number, duration = 2000) {
   const [count, setCount] = useState(0);
@@ -52,7 +53,23 @@ function StatCard({ value, suffix, label, icon }: { value: number; suffix?: stri
 }
 
 export function LandingPage() {
+  const { user, profile } = useAuth();
   const [stats, setStats] = useState({ farmers: 120, batches: 480, kg: 15000 });
+
+  const getRolePrimaryAction = () => {
+    if (!user || !profile) {
+      return { to: '/signup', label: 'Start as Farmer', icon: <Sprout className="h-5 w-5" /> };
+    }
+    if (profile.role === 'farmer') {
+      return { to: '/farmer', label: 'Open Farmer Dashboard', icon: <Sprout className="h-5 w-5" /> };
+    }
+    if (profile.role === 'admin') {
+      return { to: '/admin', label: 'Open Admin Panel', icon: <Shield className="h-5 w-5" /> };
+    }
+    return { to: '/orders', label: 'View My Orders', icon: <Store className="h-5 w-5" /> };
+  };
+
+  const primaryAction = getRolePrimaryAction();
 
   useEffect(() => {
     (async () => {
@@ -90,11 +107,11 @@ export function LandingPage() {
                 Direct from farm to your table, verified on blockchain. FarmTrace connects farmers to retailers and consumers with QR-code-based supply chain transparency.
               </p>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                <Link to="/signup" className="btn-primary text-base">
-                  <Sprout className="h-5 w-5" /> Start as Farmer
+                <Link to={primaryAction.to} className="btn-primary text-base">
+                  {primaryAction.icon} {primaryAction.label}
                 </Link>
                 <Link to="/marketplace" className="btn-secondary text-base">
-                  <Store className="h-5 w-5" /> Browse as Buyer
+                  <Store className="h-5 w-5" /> Browse Marketplace
                 </Link>
               </div>
               <div className="mt-8 flex items-center gap-6 text-sm text-earth-600">

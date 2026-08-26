@@ -29,8 +29,14 @@ export function AdminDashboard() {
       supabase.from('orders').select(`*, order_items (*, produce_batches(*))`).order('created_at', { ascending: false }).limit(20),
       supabase.from('profiles').select('*'),
     ]);
+
+    const normalizedOrders = ((o as OrderWithItems[]) ?? []).map((order) => ({
+      ...order,
+      order_items: Array.isArray(order.order_items) ? order.order_items : [],
+    }));
+
     setFarmers((fp as (FarmerProfile & { profiles: Profile })[]) ?? []);
-    setOrders((o as OrderWithItems[]) ?? []);
+    setOrders(normalizedOrders);
     setProfiles((p as Profile[]) ?? []);
     setLoading(false);
   }, []);
@@ -237,7 +243,7 @@ export function AdminDashboard() {
                         <tr key={o.id} className="border-b border-earth-100">
                           <td className="py-3 pr-4 font-medium text-earth-900">#{o.id.slice(0, 8)}</td>
                           <td className="py-3 pr-4 text-earth-600">{formatDate(o.created_at)}</td>
-                          <td className="py-3 pr-4 text-earth-600">{o.order_items.length}</td>
+                          <td className="py-3 pr-4 text-earth-600">{Array.isArray(o.order_items) ? o.order_items.length : 0}</td>
                           <td className="py-3 pr-4 font-semibold text-earth-900">{formatINR(o.total_amount)}</td>
                           <td className="py-3 pr-4"><Badge variant={o.status === 'delivered' ? 'success' : o.status === 'cancelled' ? 'error' : 'info'}>{o.status}</Badge></td>
                           <td className="py-3"><Badge variant={o.payment_status === 'paid' ? 'success' : 'warning'}>{o.payment_status}</Badge></td>

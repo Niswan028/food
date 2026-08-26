@@ -27,8 +27,16 @@ export function LoginPage() {
       toast(error, 'error');
       return;
     }
+
+    const normalizedEmail = email.toLowerCase();
+    const nextPath = normalizedEmail.includes('admin')
+      ? '/admin'
+      : normalizedEmail.includes('farmer')
+        ? '/farmer'
+        : '/orders';
+
     toast('Welcome back!', 'success');
-    navigate('/');
+    navigate(nextPath);
   };
 
   const fillDemo = (role: 'farmer' | 'buyer' | 'admin') => {

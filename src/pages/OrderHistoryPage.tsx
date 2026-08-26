@@ -21,16 +21,69 @@ export function OrderHistoryPage() {
   useEffect(() => {
     (async () => {
       if (!user) return;
-      const { data, error } = await supabase
+
+      const { data: rawOrders, error } = await supabase
         .from('orders')
-        .select(`*, order_items (*, produce_batches (*))`)
+        .select('*')
         .eq('buyer_id', user.id)
         .order('created_at', { ascending: false });
-      if (error) toast(error.message, 'error');
-      setOrders((data as OrderWithItems[]) ?? []);
+
+      if (error) {
+        toast(error.message, 'error');
+        setLoading(false);
+        return;
+      }
+
+      const ordersData = (rawOrders as any[]) ?? [];
+      const orderIds = ordersData.map(order => order.id);
+
+      const itemResults = orderIds.length
+        ? await Promise.all(
+            orderIds.map(async (orderId) => (
+              await supabase.from('order_items').select('*').eq('order_id', orderId)
+            ))
+          )
+        : [];
+
+      const itemsByOrder = new Map<string, any[]>();
+      itemResults.forEach((result) => {
+        const rowItems = result.data ?? [];
+        rowItems.forEach((item) => {
+          const list = itemsByOrder.get(item.order_id) ?? [];
+          list.push(item);
+          itemsByOrder.set(item.order_id, list);
+        });
+      });
+
+      const batchIds = [...new Set((itemResults.flatMap((result) => (result.data ?? []).map((item) => item.batch_id))))];
+      let batchesById = new Map<string, any>();
+
+      if (batchIds.length) {
+        const batchResults = await Promise.all(
+          batchIds.map(async (batchId) => await supabase.from('produce_batches').select('*').eq('id', batchId).maybeSingle())
+        );
+
+        batchResults.forEach((result) => {
+          if (result.data) batchesById.set(result.data.id, result.data);
+        });
+      }
+
+      const enrichedOrders = ordersData.map((order) => {
+        const items = (itemsByOrder.get(order.id) ?? []).map((item) => ({
+          ...item,
+          produce_batches: batchesById.get(item.batch_id) ?? null,
+        }));
+
+        return {
+          ...order,
+          order_items: items,
+        } as OrderWithItems;
+      });
+
+      setOrders(enrichedOrders);
       setLoading(false);
     })();
-  }, [user]);
+  }, [user, toast]);
 
   const submitReview = async (order: OrderWithItems) => {
     if (!user) return;

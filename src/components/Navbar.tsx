@@ -16,11 +16,11 @@ export function Navbar() {
   };
 
   const dashboardLink = () => {
-    if (!profile) return '/dashboard';
+    if (!profile) return '/login';
     if (profile.role === 'farmer') return '/farmer';
-    if (profile.role === 'buyer') return '/marketplace';
+    if (profile.role === 'buyer') return '/orders';
     if (profile.role === 'admin') return '/admin';
-    return '/dashboard';
+    return '/marketplace';
   };
 
   const isActive = (path: string) => location.pathname.startsWith(path);
