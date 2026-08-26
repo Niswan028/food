@@ -123,11 +123,39 @@ export function OrderHistoryPage() {
   }
 
   const statusSteps = ['confirmed', 'packed', 'shipped', 'delivered'];
+  const totalSpent = orders.reduce((sum, order) => sum + order.total_amount, 0);
+  const deliveredOrders = orders.filter((order) => order.status === 'delivered').length;
 
   return (
     <div className="min-h-screen bg-earth-50">
-      <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6">
-        <h1 className="mb-6 font-display text-2xl font-bold text-earth-950">Order History</h1>
+      <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6">
+        <div className="mb-6 overflow-hidden rounded-3xl bg-gradient-to-r from-accent-600 via-primary-600 to-primary-700 p-6 text-white shadow-lg">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <p className="text-sm font-medium uppercase tracking-[0.18em] text-accent-100">Buyer dashboard</p>
+              <h1 className="mt-2 font-display text-3xl font-bold">Your orders</h1>
+              <p className="mt-2 text-sm text-accent-50">Track freshness, deliveries, and product provenance in one place.</p>
+            </div>
+            <Link to="/marketplace" className="inline-flex items-center justify-center rounded-xl bg-white px-4 py-3 text-sm font-semibold text-primary-700 shadow-sm transition hover:bg-accent-50">
+              Browse marketplace
+            </Link>
+          </div>
+        </div>
+
+        <div className="mb-6 grid gap-4 grid-cols-1 sm:grid-cols-3">
+          <div className="card">
+            <p className="text-sm text-earth-600">Total spend</p>
+            <p className="mt-2 font-display text-2xl font-bold text-earth-950">{formatINR(totalSpent)}</p>
+          </div>
+          <div className="card">
+            <p className="text-sm text-earth-600">Orders placed</p>
+            <p className="mt-2 font-display text-2xl font-bold text-earth-950">{orders.length}</p>
+          </div>
+          <div className="card">
+            <p className="text-sm text-earth-600">Delivered</p>
+            <p className="mt-2 font-display text-2xl font-bold text-earth-950">{deliveredOrders}</p>
+          </div>
+        </div>
 
         <div className="space-y-4">
           {orders.map((order, i) => {
@@ -150,23 +178,25 @@ export function OrderHistoryPage() {
 
                 {/* Status tracker */}
                 {order.status !== 'cancelled' && (
-                  <div className="mt-4 flex items-center gap-2">
-                    {statusSteps.map((step, idx) => (
-                      <div key={step} className="flex flex-1 items-center gap-2">
-                        <div className={`flex h-7 w-7 items-center justify-center rounded-full text-xs ${idx <= statusIdx ? 'bg-primary-600 text-white' : 'bg-earth-100 text-earth-400'}`}>
-                          {idx < statusIdx ? <CheckCircle2 className="h-4 w-4" /> : idx === 0 ? <Package className="h-3 w-3" /> : idx === 1 ? <Package className="h-3 w-3" /> : idx === 2 ? <Truck className="h-3 w-3" /> : <MapPin className="h-3 w-3" />}
+                  <div className="mt-4 overflow-x-auto">
+                    <div className="flex min-w-[420px] items-center gap-2">
+                      {statusSteps.map((step, idx) => (
+                        <div key={step} className="flex flex-1 items-center gap-2">
+                          <div className={`flex h-7 w-7 items-center justify-center rounded-full text-xs ${idx <= statusIdx ? 'bg-primary-600 text-white' : 'bg-earth-100 text-earth-400'}`}>
+                            {idx < statusIdx ? <CheckCircle2 className="h-4 w-4" /> : idx === 0 ? <Package className="h-3 w-3" /> : idx === 1 ? <Package className="h-3 w-3" /> : idx === 2 ? <Truck className="h-3 w-3" /> : <MapPin className="h-3 w-3" />}
+                          </div>
+                          <span className={`text-[10px] capitalize sm:text-xs ${idx <= statusIdx ? 'font-medium text-earth-900' : 'text-earth-400'}`}>{step}</span>
+                          {idx < statusSteps.length - 1 && <div className={`h-0.5 flex-1 ${idx < statusIdx ? 'bg-primary-600' : 'bg-earth-200'}`} />}
                         </div>
-                        <span className={`text-xs capitalize ${idx <= statusIdx ? 'font-medium text-earth-900' : 'text-earth-400'}`}>{step}</span>
-                        {idx < statusSteps.length - 1 && <div className={`h-0.5 flex-1 ${idx < statusIdx ? 'bg-primary-600' : 'bg-earth-200'}`} />}
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
                 )}
 
                 {/* Items */}
                 <div className="mt-4 space-y-2">
                   {order.order_items.map(oi => (
-                    <div key={oi.id} className="flex items-center justify-between rounded-lg bg-earth-50 px-3 py-2 text-sm">
+                    <div key={oi.id} className="flex flex-col gap-2 rounded-lg bg-earth-50 px-3 py-2 text-sm sm:flex-row sm:items-center sm:justify-between">
                       <div className="flex items-center gap-3">
                         {oi.produce_batches?.photo_urls?.[0] ? (
                           <img src={oi.produce_batches.photo_urls[0]} alt="" className="h-10 w-10 rounded-lg object-cover" />

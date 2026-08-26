@@ -76,17 +76,19 @@ export function FarmerDashboard() {
   return (
     <div className="min-h-screen bg-earth-50">
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
-        {/* Header */}
-        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="font-display text-2xl font-bold text-earth-950">{farmerProfile?.farm_name ?? 'My Farm'}</h1>
-            <p className="text-sm text-earth-600">
-              {farmerProfile ? `${farmerProfile.location} · ${farmerProfile.farm_size_acres} acres` : 'Set up your farm profile to get started'}
-            </p>
+        <div className="mb-6 overflow-hidden rounded-3xl bg-gradient-to-r from-primary-700 via-primary-600 to-success-600 p-6 text-white shadow-lg">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <p className="text-sm font-medium uppercase tracking-[0.18em] text-primary-100">Farm dashboard</p>
+              <h1 className="mt-2 font-display text-3xl font-bold">{farmerProfile?.farm_name ?? 'My Farm'}</h1>
+              <p className="mt-2 text-sm text-primary-50">
+                {farmerProfile ? `${farmerProfile.location} · ${farmerProfile.farm_size_acres} acres` : 'Set up your farm profile to get started'}
+              </p>
+            </div>
+            <button onClick={() => setShowAddModal(true)} className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-3 text-sm font-semibold text-primary-700 shadow-sm transition hover:bg-primary-50">
+              <Plus className="h-4 w-4" /> Add Produce Batch
+            </button>
           </div>
-          <button onClick={() => setShowAddModal(true)} className="btn-primary">
-            <Plus className="h-4 w-4" /> Add Produce Batch
-          </button>
         </div>
 
         {/* Verification status */}
@@ -106,10 +108,10 @@ export function FarmerDashboard() {
         )}
 
         {/* Tabs */}
-        <div className="mb-6 flex gap-1 rounded-xl bg-white p-1 shadow-sm">
+        <div className="mb-6 flex flex-wrap gap-1 rounded-xl bg-white p-1 shadow-sm">
           {(['overview', 'batches', 'orders', 'analytics'] as Tab[]).map(t => (
             <button key={t} onClick={() => setTab(t)}
-              className={`flex-1 rounded-lg px-4 py-2 text-sm font-medium capitalize transition-all ${tab === t ? 'bg-primary-600 text-white' : 'text-earth-600 hover:bg-earth-50'}`}>
+              className={`min-w-[90px] flex-1 rounded-lg px-3 py-2 text-sm font-medium capitalize transition-all ${tab === t ? 'bg-primary-600 text-white' : 'text-earth-600 hover:bg-earth-50'}`}>
               {t}
             </button>
           ))}
@@ -162,48 +164,79 @@ function OverviewTab({ batches, activeBatches, soldBatches, totalRevenue, orders
   const pendingOrders = orders.filter(o => o.status === 'pending' || o.status === 'confirmed');
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard icon={<Package className="h-5 w-5 text-white" />} label="Active Batches" value={String(activeBatches)} color="bg-primary-600" />
-        <StatCard icon={<CheckCircle2 className="h-5 w-5 text-white" />} label="Sold Batches" value={String(soldBatches)} color="bg-success-600" />
-        <StatCard icon={<IndianRupee className="h-5 w-5 text-white" />} label="Total Revenue" value={formatINR(totalRevenue)} color="bg-accent-600" />
-        <StatCard icon={<TrendingUp className="h-5 w-5 text-white" />} label="Pending Orders" value={String(pendingOrders.length)} color="bg-warning-600" />
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 xl:grid-cols-4">
+        <StatCard icon={<Package className="h-5 w-5 text-white" />} label="Active inventory" value={String(activeBatches)} color="bg-primary-600" />
+        <StatCard icon={<CheckCircle2 className="h-5 w-5 text-white" />} label="Sold batches" value={String(soldBatches)} color="bg-success-600" />
+        <StatCard icon={<IndianRupee className="h-5 w-5 text-white" />} label="Total revenue" value={formatINR(totalRevenue)} color="bg-accent-600" />
+        <StatCard icon={<TrendingUp className="h-5 w-5 text-white" />} label="Pending orders" value={String(pendingOrders.length)} color="bg-warning-600" />
       </div>
 
-      {farmerProfile && (
-        <div className="card">
-          <h3 className="mb-4 font-semibold text-earth-950">Farm Profile</h3>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <p className="text-xs text-earth-500">Farm Name</p>
-              <p className="font-medium text-earth-900">{farmerProfile.farm_name}</p>
-            </div>
-            <div>
-              <p className="text-xs text-earth-500">Location</p>
-              <p className="font-medium text-earth-900">{farmerProfile.location}</p>
-            </div>
-            <div>
-              <p className="text-xs text-earth-500">Farm Size</p>
-              <p className="font-medium text-earth-900">{farmerProfile.farm_size_acres} acres</p>
-            </div>
-            <div>
-              <p className="text-xs text-earth-500">Certifications</p>
-              <div className="flex flex-wrap gap-1 mt-1">
-                {farmerProfile.certifications.map(c => <Badge key={c} variant="success">{c}</Badge>)}
+      <div className="grid gap-6 grid-cols-1 xl:grid-cols-[1.4fr_0.9fr]">
+        {farmerProfile && (
+          <div className="card">
+            <h3 className="mb-4 font-semibold text-earth-950">Farm summary</h3>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="rounded-2xl bg-earth-50 p-4">
+                <p className="text-xs text-earth-500">Farm name</p>
+                <p className="mt-2 font-medium text-earth-900">{farmerProfile.farm_name}</p>
+              </div>
+              <div className="rounded-2xl bg-earth-50 p-4">
+                <p className="text-xs text-earth-500">Location</p>
+                <p className="mt-2 font-medium text-earth-900">{farmerProfile.location}</p>
+              </div>
+              <div className="rounded-2xl bg-earth-50 p-4">
+                <p className="text-xs text-earth-500">Farm size</p>
+                <p className="mt-2 font-medium text-earth-900">{farmerProfile.farm_size_acres} acres</p>
+              </div>
+              <div className="rounded-2xl bg-earth-50 p-4">
+                <p className="text-xs text-earth-500">Verification</p>
+                <div className="mt-2">
+                  <Badge variant={farmerProfile.verification_status === 'approved' ? 'success' : farmerProfile.verification_status === 'rejected' ? 'error' : 'warning'}>
+                    {farmerProfile.verification_status}
+                  </Badge>
+                </div>
               </div>
             </div>
+            {farmerProfile.bio && <p className="mt-4 border-t border-earth-100 pt-4 text-sm text-earth-600">{farmerProfile.bio}</p>}
           </div>
-          {farmerProfile.bio && <p className="mt-4 border-t border-earth-100 pt-4 text-sm text-earth-600">{farmerProfile.bio}</p>}
+        )}
+
+        <div className="card">
+          <h3 className="mb-4 font-semibold text-earth-950">Quick actions</h3>
+          <div className="space-y-3">
+            <button onClick={() => {}} className="flex w-full items-center justify-between rounded-2xl border border-earth-200 bg-earth-50 px-4 py-3 text-left hover:bg-earth-100">
+              <span>
+                <span className="block font-medium text-earth-900">List a new batch</span>
+                <span className="text-xs text-earth-500">Share produce with buyers</span>
+              </span>
+              <Plus className="h-4 w-4 text-earth-500" />
+            </button>
+            <button onClick={() => {}} className="flex w-full items-center justify-between rounded-2xl border border-earth-200 bg-earth-50 px-4 py-3 text-left hover:bg-earth-100">
+              <span>
+                <span className="block font-medium text-earth-900">Check traceability</span>
+                <span className="text-xs text-earth-500">Review QR and batch history</span>
+              </span>
+              <QrCode className="h-4 w-4 text-earth-500" />
+            </button>
+            <button onClick={() => {}} className="flex w-full items-center justify-between rounded-2xl border border-earth-200 bg-earth-50 px-4 py-3 text-left hover:bg-earth-100">
+              <span>
+                <span className="block font-medium text-earth-900">View certifications</span>
+                <span className="text-xs text-earth-500">Show quality and compliance proof</span>
+              </span>
+              <Award className="h-4 w-4 text-earth-500" />
+            </button>
+          </div>
         </div>
-      )}
+      </div>
 
       <div className="card">
-        <h3 className="mb-4 font-semibold text-earth-950">Recent Batches</h3>
+        <h3 className="mb-4 font-semibold text-earth-950">Recent batches</h3>
         {batches.length === 0 ? (
           <EmptyState icon={<Sprout className="h-8 w-8" />} title="No batches yet" description="Create your first produce batch to start selling." />
         ) : (
           <div className="space-y-2">
             {batches.slice(0, 5).map(b => (
-              <div key={b.id} className="flex items-center justify-between rounded-xl border border-earth-100 px-4 py-3">
+              <div key={b.id} className="flex flex-col gap-3 rounded-xl border border-earth-100 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-center gap-3">
                   <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-100 text-primary-700">
                     <Leaf className="h-5 w-5" />
@@ -213,7 +246,7 @@ function OverviewTab({ batches, activeBatches, soldBatches, totalRevenue, orders
                     <p className="text-xs text-earth-500">{b.batch_code} · {formatDate(b.harvest_date)}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center justify-between gap-3 sm:justify-end">
                   <span className="text-sm font-semibold text-earth-900">{formatINR(b.price_per_unit)}/{b.unit}</span>
                   <BatchStatusBadge status={b.status} />
                 </div>

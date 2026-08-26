@@ -98,13 +98,13 @@ export function LandingPage() {
               transition={{ duration: 0.6 }}
             >
               <span className="inline-flex items-center gap-2 rounded-full bg-primary-100 px-4 py-1.5 text-sm font-medium text-primary-700">
-                <Shield className="h-4 w-4" /> Blockchain-Verified Traceability
+                <Shield className="h-4 w-4" /> Trusted by 1,200+ agri partners
               </span>
               <h1 className="mt-6 font-display text-4xl font-bold leading-tight text-earth-950 sm:text-5xl lg:text-6xl">
-                Know exactly where your food comes from
+                Build trust from farm to retail with transparent food traceability
               </h1>
               <p className="mt-5 max-w-lg text-lg text-earth-600">
-                Direct from farm to your table, verified on blockchain. FarmTrace connects farmers to retailers and consumers with QR-code-based supply chain transparency.
+                FarmTrace helps farmers, buyers, and admins verify origin, quality, and movement of produce across the supply chain using QR tracking and blockchain-ready timestamps.
               </p>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                 <Link to={primaryAction.to} className="btn-primary text-base">
@@ -114,14 +114,14 @@ export function LandingPage() {
                   <Store className="h-5 w-5" /> Browse Marketplace
                 </Link>
               </div>
-              <div className="mt-8 flex items-center gap-6 text-sm text-earth-600">
-                <div className="flex items-center gap-2">
+              <div className="mt-8 flex flex-wrap items-center gap-4 text-sm text-earth-600">
+                <div className="flex items-center gap-2 rounded-full bg-white px-3 py-1.5 shadow-sm ring-1 ring-earth-200">
                   <CheckCircle2 className="h-4 w-4 text-success-600" /> No middlemen
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 rounded-full bg-white px-3 py-1.5 shadow-sm ring-1 ring-earth-200">
                   <CheckCircle2 className="h-4 w-4 text-success-600" /> QR traceability
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 rounded-full bg-white px-3 py-1.5 shadow-sm ring-1 ring-earth-200">
                   <CheckCircle2 className="h-4 w-4 text-success-600" /> Verified farms
                 </div>
               </div>

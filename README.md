@@ -81,8 +81,8 @@ FarmTrace contributes to:
 
 ## Future improvements
 
-- real Polygon/solidity smart contract integration
-- secure JWT auth
+- real Polygon Amoy or mainnet smart contract deployment
+- secure JWT auth and role-based API authorization
 - production MongoDB schemas and validation
 - notifications and WhatsApp/SMS updates
 - AI-based quality or demand prediction
@@ -90,4 +90,4 @@ FarmTrace contributes to:
 
 ## Status
 
-This project is structured as a strong SIH demo with real product flows, modern UI, and a backend-ready architecture. It is ready for further enhancement toward a real deployment-level blockchain and supply-chain platform.
+This project is structured as a strong SIH demo with real product flows, modern UI, and a backend-ready architecture. The blockchain and trace layers are live-ready and switch to real chain anchoring when valid Polygon RPC and private key environment values are provided; otherwise, the app gracefully runs in a simulated verification mode for demos and local validation.

@@ -4,13 +4,16 @@ import { BlockchainAnchor } from '@/types';
 
 const rpcUrl = (import.meta.env.VITE_BLOCKCHAIN_RPC_URL as string) || '';
 const privateKey = (import.meta.env.VITE_BLOCKCHAIN_PRIVATE_KEY as string) || '';
-const networkName = (import.meta.env.VITE_BLOCKCHAIN_NETWORK as string) || 'polygon-mumbai';
-const scanBaseUrl = (import.meta.env.VITE_BLOCKCHAIN_SCAN_BASE_URL as string) || 'https://mumbai.polygonscan.com';
+const networkName = (import.meta.env.VITE_BLOCKCHAIN_NETWORK as string) || 'polygon-amoy';
+const scanBaseUrl = (import.meta.env.VITE_BLOCKCHAIN_SCAN_BASE_URL as string) || 'https://amoy.polygonscan.com';
 
 export const blockchainStatus = {
   isConfigured: Boolean(rpcUrl && privateKey),
   network: networkName,
   scanBaseUrl,
+  mode: Boolean(rpcUrl && privateKey) ? 'live' : 'simulated',
+  label: Boolean(rpcUrl && privateKey) ? 'Live Polygon Amoy' : 'Demo verification mode',
+  trusted: Boolean(rpcUrl && privateKey),
 };
 
 export async function anchorBatchToChain(batchId: string): Promise<BlockchainAnchor | null> {
@@ -88,6 +91,13 @@ function generateMockTxHash(): string {
     hash += hex[Math.floor(Math.random() * 16)];
   }
   return hash;
+}
+
+export function formatTxHash(txHash: string, chars = 8): string {
+  if (!txHash) return '—';
+  const normalized = txHash.startsWith('0x') ? txHash : `0x${txHash}`;
+  if (normalized.length <= chars * 2) return normalized;
+  return `${normalized.slice(0, chars)}...${normalized.slice(-chars)}`;
 }
 
 function generateMockBlockNumber(): number {

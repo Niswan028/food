@@ -69,16 +69,17 @@ export function AdminDashboard() {
   return (
     <div className="min-h-screen bg-earth-50">
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
-        <div className="mb-6">
-          <h1 className="font-display text-2xl font-bold text-earth-950">Admin Dashboard</h1>
-          <p className="text-sm text-earth-600">Platform overview and management</p>
+        <div className="mb-6 overflow-hidden rounded-3xl bg-gradient-to-r from-earth-900 via-earth-800 to-primary-900 p-6 text-white shadow-lg">
+          <p className="text-sm font-medium uppercase tracking-[0.18em] text-earth-300">Operations control</p>
+          <h1 className="mt-2 font-display text-3xl font-bold">Admin Dashboard</h1>
+          <p className="mt-2 text-sm text-earth-200">Platform overview, verification status, and supply-chain health</p>
         </div>
 
         {/* Tabs */}
-        <div className="mb-6 flex gap-1 rounded-xl bg-white p-1 shadow-sm">
+        <div className="mb-6 flex flex-wrap gap-1 rounded-xl bg-white p-1 shadow-sm">
           {(['overview', 'verification', 'activity'] as Tab[]).map(t => (
             <button key={t} onClick={() => setTab(t)}
-              className={`flex-1 rounded-lg px-4 py-2 text-sm font-medium capitalize transition-all ${tab === t ? 'bg-primary-600 text-white' : 'text-earth-600 hover:bg-earth-50'}`}>
+              className={`min-w-[120px] flex-1 rounded-lg px-3 py-2 text-sm font-medium capitalize transition-all ${tab === t ? 'bg-primary-600 text-white' : 'text-earth-600 hover:bg-earth-50'}`}>
               {t === 'verification' ? `Verification${pendingFarmers.length ? ` (${pendingFarmers.length})` : ''}` : t}
             </button>
           ))}
@@ -86,43 +87,69 @@ export function AdminDashboard() {
 
         {tab === 'overview' && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <StatCard icon={<Sprout className="h-5 w-5 text-white" />} label="Total Farmers" value={String(totalFarmers)} color="bg-primary-600" />
-              <StatCard icon={<Users className="h-5 w-5 text-white" />} label="Total Buyers" value={String(totalBuyers)} color="bg-accent-600" />
-              <StatCard icon={<Package className="h-5 w-5 text-white" />} label="Total Orders" value={String(totalOrders)} color="bg-success-600" />
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 xl:grid-cols-4">
+              <StatCard icon={<Sprout className="h-5 w-5 text-white" />} label="Total farmers" value={String(totalFarmers)} color="bg-primary-600" />
+              <StatCard icon={<Users className="h-5 w-5 text-white" />} label="Total buyers" value={String(totalBuyers)} color="bg-accent-600" />
+              <StatCard icon={<Package className="h-5 w-5 text-white" />} label="Orders" value={String(totalOrders)} color="bg-success-600" />
               <StatCard icon={<IndianRupee className="h-5 w-5 text-white" />} label="GMV" value={formatINR(gmv)} color="bg-warning-600" />
             </div>
 
-            <div className="card">
-              <h3 className="mb-4 font-semibold text-earth-950">Blockchain Integration Status</h3>
-              <div className="space-y-4">
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm font-medium text-earth-700">Smart Contract</span>
-                    <span className="text-sm font-semibold text-success-600">Designed ✓</span>
+            <div className="grid gap-6 grid-cols-1 xl:grid-cols-[1.1fr_0.9fr]">
+              <div className="card">
+                <h3 className="mb-4 font-semibold text-earth-950">Platform health</h3>
+                <div className="space-y-4">
+                  <div className="rounded-2xl bg-primary-50 p-4">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="font-medium text-earth-700">Verified farms</span>
+                      <span className="font-semibold text-primary-700">{farmers.filter(f => f.verification_status === 'approved').length}</span>
+                    </div>
+                  </div>
+                  <div className="rounded-2xl bg-success-50 p-4">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="font-medium text-earth-700">Approved batches</span>
+                      <span className="font-semibold text-success-700">{orders.length}</span>
+                    </div>
+                  </div>
+                  <div className="rounded-2xl bg-warning-50 p-4">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="font-medium text-earth-700">Pending verification</span>
+                      <span className="font-semibold text-warning-700">{pendingFarmers.length}</span>
+                    </div>
                   </div>
                 </div>
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm font-medium text-earth-700">Interface</span>
-                    <span className="text-sm font-semibold text-success-600">Implemented ✓</span>
+              </div>
+
+              <div className="card">
+                <h3 className="mb-4 font-semibold text-earth-950">Blockchain status</h3>
+                <div className="space-y-4">
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-sm font-medium text-earth-700">Smart contract</span>
+                      <span className="text-sm font-semibold text-success-600">Designed ✓</span>
+                    </div>
                   </div>
-                </div>
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-earth-700">Testnet Deployment</span>
-                    <span className="text-sm font-semibold text-warning-600">In Progress</span>
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-sm font-medium text-earth-700">Trace interface</span>
+                      <span className="text-sm font-semibold text-success-600">Live ✓</span>
+                    </div>
                   </div>
-                  <div className="h-2 rounded-full bg-earth-200 overflow-hidden">
-                    <div className="h-full bg-gradient-to-r from-warning-500 to-warning-600 rounded-full" style={{ width: '80%' }} />
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-earth-700">Testnet deployment</span>
+                      <span className="text-sm font-semibold text-warning-600">In progress</span>
+                    </div>
+                    <div className="h-2 rounded-full bg-earth-200 overflow-hidden">
+                      <div className="h-full bg-gradient-to-r from-warning-500 to-warning-600 rounded-full" style={{ width: '80%' }} />
+                    </div>
+                    <p className="text-xs text-earth-500 mt-1">80% complete</p>
                   </div>
-                  <p className="text-xs text-earth-500 mt-1">80% complete</p>
                 </div>
               </div>
             </div>
 
             <div className="card">
-              <h3 className="mb-4 font-semibold text-earth-950">GMV Trend</h3>
+              <h3 className="mb-4 font-semibold text-earth-950">GMV trend</h3>
               {gmvData.length > 0 ? (
                 <ResponsiveContainer width="100%" height={280}>
                   <AreaChart data={gmvData}>
@@ -148,7 +175,7 @@ export function AdminDashboard() {
               <h3 className="mb-4 font-semibold text-earth-950">Recent Activity</h3>
               <div className="space-y-2">
                 {orders.slice(0, 8).map(o => (
-                  <div key={o.id} className="flex items-center justify-between rounded-lg border border-earth-100 px-4 py-3">
+                  <div key={o.id} className="flex flex-col gap-3 rounded-lg border border-earth-100 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex items-center gap-3">
                       <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary-100 text-primary-700">
                         <Activity className="h-4 w-4" />
@@ -158,7 +185,7 @@ export function AdminDashboard() {
                         <p className="text-xs text-earth-500">{timeAgo(o.created_at)} · {o.order_items.length} items</p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center justify-between gap-2 sm:justify-end">
                       <span className="text-sm font-semibold text-earth-900">{formatINR(o.total_amount)}</span>
                       <Badge variant={o.status === 'delivered' ? 'success' : o.status === 'cancelled' ? 'error' : 'info'}>{o.status}</Badge>
                     </div>

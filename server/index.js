@@ -13,6 +13,17 @@ const MONGODB_DB = process.env.MONGODB_DB || 'farmtrace';
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 
+const dataModel = Object.freeze({
+  profiles: { id: 'string', email: 'string', full_name: 'string', role: 'farmer|buyer|admin', phone: 'string|null', avatar_url: 'string|null', created_at: 'datetime' },
+  farmer_profiles: { id: 'string', user_id: 'string', farm_name: 'string', location: 'string', state: 'string', farm_size_acres: 'number', crops_grown: 'string[]', certifications: 'string[]', verification_status: 'pending|approved|rejected', document_url: 'string|null', bio: 'string|null', created_at: 'datetime' },
+  produce_batches: { id: 'string', batch_code: 'string', farmer_id: 'string', crop_name: 'string', category: 'string', quantity: 'number', unit: 'string', harvest_date: 'date', price_per_unit: 'number', quality_grade: 'string', certifications: 'string[]', photo_urls: 'string[]', description: 'string|null', status: 'available|reserved|sold|packed|shipped|delivered|cancelled', created_at: 'datetime', updated_at: 'datetime' },
+  orders: { id: 'string', buyer_id: 'string', total_amount: 'number', status: 'pending|confirmed|packed|shipped|delivered|cancelled', payment_status: 'pending|paid|failed|refunded', shipping_address: 'string', shipping_state: 'string|null', buyer_phone: 'string|null', created_at: 'datetime', updated_at: 'datetime' },
+  order_items: { id: 'string', order_id: 'string', batch_id: 'string', quantity: 'number', unit_price: 'number', line_total: 'number', buyer_id: 'string' },
+  payments: { id: 'string', order_id: 'string', amount: 'number', status: 'pending|paid|failed|refunded', method: 'string|null', razorpay_order_id: 'string|null', razorpay_payment_id: 'string|null', razorpay_signature: 'string|null', created_at: 'datetime' },
+  blockchain_anchor: { id: 'string', batch_id: 'string', tx_hash: 'string', block_number: 'number', network: 'string', anchored_at: 'datetime' },
+  reviews: { id: 'string', order_id: 'string', batch_id: 'string', farmer_id: 'string', buyer_id: 'string', rating: 'number', comment: 'string|null', created_at: 'datetime' },
+});
+
 const demoStore = {
   profiles: [
     {
@@ -71,10 +82,46 @@ const demoStore = {
       harvest_date: '2025-08-10',
       price_per_unit: 38,
       quality_grade: 'A',
-      certifications: ['Organic'],
-      photo_urls: [],
-      description: 'Fresh organic tomatoes from Nashik.',
+      certifications: ['Organic', 'FSSAI'],
+      photo_urls: ['https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=900&q=80'],
+      description: 'Fresh organic tomatoes harvested from controlled drip-irrigated plots in Nashik.',
       status: 'available',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    },
+    {
+      id: 'batch-2',
+      batch_code: 'FT-01-002',
+      farmer_id: 'user-farmer-1',
+      crop_name: 'Onion',
+      category: 'Vegetables',
+      quantity: 680,
+      unit: 'kg',
+      harvest_date: '2025-08-14',
+      price_per_unit: 26,
+      quality_grade: 'A+',
+      certifications: ['Organic', 'Traceable'],
+      photo_urls: ['https://images.unsplash.com/photo-1502741338009-cac2772e18bc?auto=format&fit=crop&w=900&q=80'],
+      description: 'Premium red onions cultivated in a residue-free, low-moisture region.',
+      status: 'packed',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    },
+    {
+      id: 'batch-3',
+      batch_code: 'FT-01-003',
+      farmer_id: 'user-farmer-1',
+      crop_name: 'Wheat',
+      category: 'Grains',
+      quantity: 840,
+      unit: 'kg',
+      harvest_date: '2025-08-18',
+      price_per_unit: 22,
+      quality_grade: 'A',
+      certifications: ['Chemical-Free'],
+      photo_urls: ['https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=900&q=80'],
+      description: 'High-protein wheat sourced from verified paddy-free fields and sorted for export quality.',
+      status: 'shipped',
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     },
@@ -86,7 +133,7 @@ const demoStore = {
       event_type: 'created',
       actor: 'Raghav Patil',
       location: 'Nashik, Maharashtra',
-      notes: 'Batch FT-01-001 listed on FarmTrace.',
+      notes: 'Batch FT-01-001 listed on FarmTrace and registered for buyer verification.',
       created_at: new Date().toISOString(),
     },
     {
@@ -95,17 +142,35 @@ const demoStore = {
       event_type: 'harvested',
       actor: 'Raghav Patil',
       location: 'Nashik, Maharashtra',
-      notes: 'Harvested 520 kg of Tomatoes.',
+      notes: 'Harvested 520 kg of tomatoes using soil-safe irrigation and quality-controlled handling.',
       created_at: new Date().toISOString(),
     },
     {
       id: 'event-3',
       batch_id: 'batch-1',
       event_type: 'quality_checked',
+      actor: 'FarmTrace Quality Desk',
+      location: 'Nashik, Maharashtra',
+      notes: 'Quality grade A assigned. Organic certification and residue testing completed.',
+      created_at: new Date(Date.now() - 1000 * 60 * 60 * 4).toISOString(),
+    },
+    {
+      id: 'event-4',
+      batch_id: 'batch-2',
+      event_type: 'created',
       actor: 'Raghav Patil',
       location: 'Nashik, Maharashtra',
-      notes: 'Quality grade A assigned. Organic certification verified.',
-      created_at: new Date().toISOString(),
+      notes: 'Batch FT-01-002 entered the marketplace with origin and certification metadata.',
+      created_at: new Date(Date.now() - 1000 * 60 * 60 * 20).toISOString(),
+    },
+    {
+      id: 'event-5',
+      batch_id: 'batch-3',
+      event_type: 'shipped',
+      actor: 'Logistics Partner',
+      location: 'Ahmednagar, Maharashtra',
+      notes: 'Cold-chain transfer initiated for warehouse dispatch and retail tracking.',
+      created_at: new Date(Date.now() - 1000 * 60 * 60 * 9).toISOString(),
     },
   ],
   orders: [
@@ -121,6 +186,18 @@ const demoStore = {
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     },
+    {
+      id: 'order-2',
+      buyer_id: 'user-buyer-1',
+      total_amount: 234,
+      status: 'shipped',
+      payment_status: 'paid',
+      shipping_address: '44 Residency Lane, Hyderabad',
+      shipping_state: 'Telangana',
+      buyer_phone: '+91 98111 22334',
+      created_at: new Date(Date.now() - 1000 * 60 * 60 * 36).toISOString(),
+      updated_at: new Date(Date.now() - 1000 * 60 * 60 * 8).toISOString(),
+    },
   ],
   order_items: [
     {
@@ -130,6 +207,24 @@ const demoStore = {
       quantity: 2,
       unit_price: 38,
       line_total: 76,
+      buyer_id: 'user-buyer-1',
+    },
+    {
+      id: 'order-item-2',
+      order_id: 'order-2',
+      batch_id: 'batch-2',
+      quantity: 3,
+      unit_price: 26,
+      line_total: 78,
+      buyer_id: 'user-buyer-1',
+    },
+    {
+      id: 'order-item-3',
+      order_id: 'order-2',
+      batch_id: 'batch-3',
+      quantity: 4,
+      unit_price: 22,
+      line_total: 88,
       buyer_id: 'user-buyer-1',
     },
   ],
@@ -145,9 +240,37 @@ const demoStore = {
       method: 'upi',
       created_at: new Date().toISOString(),
     },
+    {
+      id: 'payment-2',
+      order_id: 'order-2',
+      razorpay_order_id: 'order_demo_002',
+      razorpay_payment_id: 'pay_demo_002',
+      razorpay_signature: 'demo_signature_2',
+      amount: 234,
+      status: 'paid',
+      method: 'card',
+      created_at: new Date(Date.now() - 1000 * 60 * 60 * 36).toISOString(),
+    },
   ],
   reviews: [],
-  blockchain_anchor: [],
+  blockchain_anchor: [
+    {
+      id: 'anchor-1',
+      batch_id: 'batch-1',
+      tx_hash: '0x7b4d2a3f6d87fd5f9d2a7d3b0c4a5f22cb8a9710d284c3a1bbd1f2145d31d67',
+      block_number: 42189023,
+      network: 'polygon-amoy',
+      anchored_at: new Date(Date.now() - 1000 * 60 * 60 * 12).toISOString(),
+    },
+    {
+      id: 'anchor-2',
+      batch_id: 'batch-2',
+      tx_hash: '0x4d4e90e1d476d12ab2a25cf10f0a3dbff9c7380ef32cc1f6b7d6ba39fc54ff33',
+      block_number: 42189071,
+      network: 'polygon-amoy',
+      anchored_at: new Date(Date.now() - 1000 * 60 * 60 * 6).toISOString(),
+    },
+  ],
   storage: [],
 };
 
@@ -267,7 +390,13 @@ async function updateRecord(collectionName, id, payload) {
 }
 
 app.get('/api/health', (_req, res) => {
-  res.json({ ok: true, message: 'FarmTrace backend is running', database: mongoDb ? mongoDb.databaseName : 'demo-mode' });
+  res.json({
+    ok: true,
+    message: 'FarmTrace backend is running',
+    database: mongoDb ? mongoDb.databaseName : 'demo-mode',
+    dataModel,
+    blockchain: { mode: process.env.VITE_BLOCKCHAIN_RPC_URL || process.env.BLOCKCHAIN_RPC_URL ? 'live' : 'simulated' },
+  });
 });
 
 app.post('/api/auth/signin', (req, res) => {
