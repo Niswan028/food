@@ -68,6 +68,12 @@ export function MarketplacePage() {
           </button>
         </div>
 
+        <div className="mb-5 flex flex-wrap items-center gap-2 text-xs text-earth-600">
+          <span className="badge bg-primary-100 text-primary-700">Verified farms</span>
+          <span className="badge bg-success-100 text-success-700">Traceable batches</span>
+          <span className="badge bg-warning-100 text-warning-700">Fresh harvests</span>
+        </div>
+
         {/* Filters */}
         {showFilters && (
           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="mb-6 overflow-hidden">

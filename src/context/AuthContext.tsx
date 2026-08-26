@@ -37,17 +37,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
-      setUser(data.session?.user ?? null);
-      if (data.session?.user) {
-        fetchProfile(data.session.user.id).finally(() => setLoading(false));
+      const sessionUser = data.session?.user ?? null;
+      setSession(data.session ?? null);
+      setUser(sessionUser);
+      if (sessionUser) {
+        fetchProfile(sessionUser.id).finally(() => setLoading(false));
       } else {
         setLoading(false);
       }
     });
 
     const { data: authListener } = supabase.auth.onAuthStateChange((_event, newSession) => {
-      setSession(newSession);
+      setSession(newSession ?? null);
       setUser(newSession?.user ?? null);
       if (newSession?.user) {
         (async () => {
@@ -62,8 +63,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [fetchProfile]);
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    return { error: error?.message ?? null };
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    const authUser = data?.user ?? null;
+
+    if (error || !authUser) {
+      return { error: error?.message ?? 'Invalid email or password' };
+    }
+
+    setSession({ user: authUser } as Session);
+    setUser(authUser as User);
+    setProfile(authUser as Profile);
+    return { error: null };
   };
 
   const signUp = async (email: string, password: string, fullName: string, role: UserRole, phone: string) => {
@@ -82,12 +92,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         phone,
       });
       if (profileErr) return { error: profileErr.message };
+      setSession({ user: data.user } as Session);
+      setUser(data.user as User);
+      setProfile({ ...data.user, full_name: fullName, role, phone, avatar_url: null, created_at: new Date().toISOString() } as Profile);
     }
     return { error: null };
   };
 
   const signOut = async () => {
     await supabase.auth.signOut();
+    setSession(null);
+    setUser(null);
     setProfile(null);
   };
 

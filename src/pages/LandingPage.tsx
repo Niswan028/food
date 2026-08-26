@@ -93,7 +93,7 @@ export function LandingPage() {
                 <Link to="/signup" className="btn-primary text-base">
                   <Sprout className="h-5 w-5" /> Start as Farmer
                 </Link>
-                <Link to="/signup" className="btn-secondary text-base">
+                <Link to="/marketplace" className="btn-secondary text-base">
                   <Store className="h-5 w-5" /> Browse as Buyer
                 </Link>
               </div>
