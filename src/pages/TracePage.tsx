@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   Leaf, Sprout, MapPin, Calendar, Award, Package, Shield, ExternalLink,
-  CheckCircle2, Truck, Search, ArrowRight, QrCode,
+  CheckCircle2, Truck, Search, ArrowRight, QrCode, Info,
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { supabase } from '@/lib/supabase';
@@ -31,6 +31,7 @@ export function TracePage() {
   const [events, setEvents] = useState<SupplyChainEvent[]>([]);
   const [anchor, setAnchor] = useState<BlockchainAnchor | null>(null);
   const [notFound, setNotFound] = useState(false);
+  const [showTooltip, setShowTooltip] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -169,8 +170,30 @@ export function TracePage() {
                 <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/20">
                   <Shield className="h-6 w-6" />
                 </div>
-                <div>
-                  <h3 className="font-display text-lg font-bold">Blockchain Verified</h3>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-display text-lg font-bold">Blockchain Verified</h3>
+                    <div className="relative">
+                      <span className="inline-flex items-center gap-1 rounded-full bg-white/20 px-2.5 py-1 text-xs font-medium text-primary-100">
+                        Simulated — Testnet Deployment Pending
+                      </span>
+                      <button
+                        onMouseEnter={() => setShowTooltip(true)}
+                        onMouseLeave={() => setShowTooltip(false)}
+                        onClick={() => setShowTooltip(!showTooltip)}
+                        className="ml-1 inline-flex h-5 w-5 items-center justify-center rounded-full bg-white/20 text-primary-100 hover:bg-white/30 transition-colors"
+                      >
+                        <Info className="h-3.5 w-3.5" />
+                      </button>
+                      {showTooltip && (
+                        <div className="absolute top-full left-0 mt-2 w-56 rounded-lg bg-white text-earth-900 p-3 shadow-lg text-xs z-50">
+                          <p className="leading-relaxed">
+                            This demo uses simulated transaction data matching our smart contract's exact output format. Live Polygon Amoy testnet deployment is the next implementation step.
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                   <p className="text-sm text-primary-100">This batch is permanently anchored on the Polygon blockchain</p>
                 </div>
               </div>

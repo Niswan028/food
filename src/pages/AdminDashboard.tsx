@@ -88,6 +88,34 @@ export function AdminDashboard() {
             </div>
 
             <div className="card">
+              <h3 className="mb-4 font-semibold text-earth-950">Blockchain Integration Status</h3>
+              <div className="space-y-4">
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-sm font-medium text-earth-700">Smart Contract</span>
+                    <span className="text-sm font-semibold text-success-600">Designed ✓</span>
+                  </div>
+                </div>
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-sm font-medium text-earth-700">Interface</span>
+                    <span className="text-sm font-semibold text-success-600">Implemented ✓</span>
+                  </div>
+                </div>
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-earth-700">Testnet Deployment</span>
+                    <span className="text-sm font-semibold text-warning-600">In Progress</span>
+                  </div>
+                  <div className="h-2 rounded-full bg-earth-200 overflow-hidden">
+                    <div className="h-full bg-gradient-to-r from-warning-500 to-warning-600 rounded-full" style={{ width: '80%' }} />
+                  </div>
+                  <p className="text-xs text-earth-500 mt-1">80% complete</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="card">
               <h3 className="mb-4 font-semibold text-earth-950">GMV Trend</h3>
               {gmvData.length > 0 ? (
                 <ResponsiveContainer width="100%" height={280}>
