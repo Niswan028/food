@@ -83,19 +83,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       options: { data: { full_name: fullName, role, phone } },
     });
     if (error) return { error: error.message };
-    if (data.user) {
-      const { error: profileErr } = await supabase.from('profiles').insert({
-        id: data.user.id,
-        email,
-        full_name: fullName,
-        role,
-        phone,
-      });
-      if (profileErr) return { error: profileErr.message };
-      setSession({ user: data.user } as Session);
-      setUser(data.user as User);
-      setProfile({ ...data.user, full_name: fullName, role, phone, avatar_url: null, created_at: new Date().toISOString() } as Profile);
+
+    const userId = data.user?.id;
+    if (!userId) return { error: 'User creation failed. Please try again.' };
+
+    if (!data.session) {
+      const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+      if (signInError) {
+        console.warn('Auto sign-in after signup failed:', signInError.message);
+      }
     }
+
+    const { error: profileErr } = await supabase.from('profiles').upsert({
+      id: userId,
+      email,
+      full_name: fullName,
+      role,
+      phone,
+    }, { onConflict: 'id' });
+    if (profileErr) return { error: profileErr.message };
+
+    if (role === 'farmer') {
+      const { error: farmerProfileErr } = await supabase.from('farmer_profiles').upsert({
+        id: `farmer-profile-${Date.now()}`,
+        user_id: userId,
+        farm_name: `${fullName}'s Farm`,
+        location: 'Pending admin review',
+        state: 'Pending',
+        farm_size_acres: 0,
+        crops_grown: [],
+        certifications: [],
+        verification_status: 'pending',
+        document_url: null,
+        bio: 'Farm profile is waiting for admin verification before the farmer can list produce.',
+      }, { onConflict: 'user_id' });
+      if (farmerProfileErr) return { error: farmerProfileErr.message };
+    }
+
+    setSession({ user: data.user } as Session);
+    setUser(data.user as User);
+    setProfile({ ...data.user, full_name: fullName, role, phone, avatar_url: null, created_at: new Date().toISOString() } as Profile);
     return { error: null };
   };
 

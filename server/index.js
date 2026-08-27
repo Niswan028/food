@@ -33,6 +33,7 @@ const demoStore = {
       role: 'farmer',
       phone: '+91 98765 43210',
       avatar_url: null,
+      password: 'FarmTrace123!',
       created_at: new Date().toISOString(),
     },
     {
@@ -42,6 +43,7 @@ const demoStore = {
       role: 'buyer',
       phone: '+91 98111 22334',
       avatar_url: null,
+      password: 'FarmTrace123!',
       created_at: new Date().toISOString(),
     },
     {
@@ -51,6 +53,7 @@ const demoStore = {
       role: 'admin',
       phone: '+91 90000 00001',
       avatar_url: null,
+      password: 'FarmTrace123!',
       created_at: new Date().toISOString(),
     },
   ],
@@ -358,15 +361,43 @@ async function listRecords(collectionName, filters = {}, sort = {}, limitValue =
 }
 
 async function saveRecord(collectionName, payload) {
+  const normalized = { ...payload };
+  delete normalized.onConflict;
+
   if (!mongoDb) {
     const items = getCollectionData(collectionName);
-    const next = { ...payload, id: payload.id || `${collectionName}-${Date.now()}` };
+    const conflictField = payload.onConflict ?? null;
+
+    if (conflictField && normalized[conflictField]) {
+      const existingIndex = items.findIndex((item) => item[conflictField] === normalized[conflictField]);
+      if (existingIndex !== -1) {
+        const updated = { ...items[existingIndex], ...normalized, id: items[existingIndex].id };
+        items[existingIndex] = updated;
+        return updated;
+      }
+    }
+
+    const next = { ...normalized, id: normalized.id || `${collectionName}-${Date.now()}` };
     items.push(next);
     return next;
   }
 
   const collection = mongoDb.collection(collectionName);
-  const result = await collection.insertOne(payload);
+  const conflictField = payload.onConflict ?? null;
+
+  if (conflictField && normalized[conflictField]) {
+    const existing = await collection.findOne({ [conflictField]: normalized[conflictField] });
+    if (existing) {
+      const updated = await collection.findOneAndUpdate(
+        { _id: existing._id },
+        { $set: normalized },
+        { returnDocument: 'after' }
+      );
+      return updated.value;
+    }
+  }
+
+  const result = await collection.insertOne(normalized);
   return await collection.findOne({ _id: result.insertedId });
 }
 
@@ -403,11 +434,19 @@ app.post('/api/auth/signin', (req, res) => {
   const { email, password } = req.body || {};
   const profile = demoStore.profiles.find((p) => p.email === email);
 
-  if (!profile || password !== 'FarmTrace123!') {
+  if (!profile) {
     return sendCollectionResult(res, null, 'Invalid email or password');
   }
 
-  sendCollectionResult(res, { user: profile, session: { user: profile } });
+  const expectedPassword = profile.password ?? 'FarmTrace123!';
+  if (password !== expectedPassword) {
+    return sendCollectionResult(res, null, 'Invalid email or password');
+  }
+
+  const safeUser = { ...profile };
+  delete safeUser.password;
+
+  sendCollectionResult(res, { user: safeUser, session: { user: safeUser } });
 });
 
 app.post('/api/auth/signup', (req, res) => {
@@ -427,11 +466,36 @@ app.post('/api/auth/signup', (req, res) => {
     role,
     phone: phone || null,
     avatar_url: null,
+    password,
     created_at: new Date().toISOString(),
   };
 
   demoStore.profiles.push(user);
-  sendCollectionResult(res, { user, session: { user } });
+
+  if (role === 'farmer') {
+    const existingFarmerProfile = demoStore.farmer_profiles.find((profile) => profile.user_id === user.id);
+    if (!existingFarmerProfile) {
+      demoStore.farmer_profiles.push({
+        id: `farmer-profile-${Date.now()}`,
+        user_id: user.id,
+        farm_name: `${full_name}'s Farm`,
+        location: 'Pending admin review',
+        state: 'Pending',
+        farm_size_acres: 0,
+        crops_grown: [],
+        certifications: [],
+        verification_status: 'pending',
+        document_url: null,
+        bio: 'Farm profile is waiting for admin verification before the farmer can list produce.',
+        created_at: new Date().toISOString(),
+      });
+    }
+  }
+
+  const safeUser = { ...user };
+  delete safeUser.password;
+
+  sendCollectionResult(res, { user: safeUser, session: { user: safeUser } });
 });
 
 app.get('/api/:collection', async (req, res) => {

@@ -46,6 +46,7 @@ class QueryBuilder {
   private action: 'select' | 'insert' | 'update' = 'select';
   private payload: any = null;
   private singleMode = false;
+  private upsertConflict: string | null = null;
 
   constructor(table: string) {
     this.table = table;
@@ -94,6 +95,13 @@ class QueryBuilder {
     return this;
   }
 
+  upsert(payload: any, options?: { onConflict?: string }) {
+    this.action = 'insert';
+    this.payload = { ...payload, ...(options?.onConflict ? { onConflict: options.onConflict } : {}) };
+    this.upsertConflict = options?.onConflict ?? null;
+    return this;
+  }
+
   then<TResult1 = any, TResult2 = never>(
     onfulfilled?: ((value: any) => TResult1 | PromiseLike<TResult1>) | null,
     onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | null,
@@ -104,7 +112,10 @@ class QueryBuilder {
   async execute() {
     try {
       if (this.action === 'insert') {
-        const result = await apiRequest<any>('POST', `/${this.table}`, this.payload);
+        const query: Record<string, string | number | boolean | undefined> = {};
+        if (this.upsertConflict) query.onConflict = this.upsertConflict;
+
+        const result = await apiRequest<any>('POST', `/${this.table}`, this.payload, query);
         if (this.selectFields) {
           return { data: result.data, error: result.error, count: result.count };
         }

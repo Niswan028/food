@@ -85,7 +85,11 @@ export function FarmerDashboard() {
                 {farmerProfile ? `${farmerProfile.location} · ${farmerProfile.farm_size_acres} acres` : 'Set up your farm profile to get started'}
               </p>
             </div>
-            <button onClick={() => setShowAddModal(true)} className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-3 text-sm font-semibold text-primary-700 shadow-sm transition hover:bg-primary-50">
+            <button
+              onClick={() => setShowAddModal(true)}
+              disabled={!farmerProfile || farmerProfile.verification_status !== 'approved'}
+              className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-3 text-sm font-semibold text-primary-700 shadow-sm transition hover:bg-primary-50 disabled:cursor-not-allowed disabled:bg-earth-200 disabled:text-earth-500"
+            >
               <Plus className="h-4 w-4" /> Add Produce Batch
             </button>
           </div>
@@ -97,7 +101,7 @@ export function FarmerDashboard() {
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-warning-100 text-warning-700">
               <Award className="h-4 w-4" />
             </div>
-            <p className="text-sm text-warning-800">Your farm is pending verification. You can list batches while we review your profile.</p>
+            <p className="text-sm text-warning-800">Your farm is pending admin verification. You cannot list or sell produce until the admin approves your profile.</p>
           </div>
         )}
         {farmerProfile?.verification_status === 'approved' && (
